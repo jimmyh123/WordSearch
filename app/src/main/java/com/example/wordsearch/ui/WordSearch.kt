@@ -19,7 +19,7 @@ fun WordSearch(
     gameViewModel: GameViewModel = viewModel(),
 ) {
     val gameUiState by gameViewModel.uiState.collectAsState()
-    var text by remember { mutableStateOf("") }
+//    var text by remember { mutableStateOf("") }
 
     Column (
         modifier = modifier
@@ -48,7 +48,7 @@ fun WordSearch(
         Spacer(modifier = modifier.padding(8.dp))
 
         OutlinedTextField(
-            value = text,
+            value = gameViewModel.userGuess,
             onValueChange = { gameViewModel.updateUserGuess(it) },
             label = { Text("Enter your answer") },
             modifier = Modifier.fillMaxWidth(),
@@ -70,7 +70,7 @@ fun WordSearch(
             OutlinedButton(onClick = { gameViewModel.skipWord() }) {
                 Text("Skip")
             }
-            OutlinedButton(onClick = { /*TODO*/ }) {
+            OutlinedButton(onClick = { gameViewModel.checkSubmittedGuess() }) {
                 Text("Submit")
             }
         }

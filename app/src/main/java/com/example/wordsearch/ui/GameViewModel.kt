@@ -4,9 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-
 import com.example.wordsearch.data.allCluesAndAnswers
-
 import com.example.wordsearch.util.Constants.MAX_NO_OF_TURNS
 import com.example.wordsearch.util.Constants.difficulty
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,14 +14,14 @@ import kotlinx.coroutines.flow.update
 
 class GameViewModel : ViewModel() {
 
-    private lateinit var currentWord: String
+//    private lateinit var currentWord: String
     private var usedWords: MutableSet<Int> = mutableSetOf()
-
+    var userGuess by mutableStateOf("")
+        private set
     private val _uiState = MutableStateFlow(GameUiState())
     val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
 
-    var userGuess by mutableStateOf("")
-        private set
+
 
     init {
 //        resetGame()
@@ -41,8 +39,6 @@ class GameViewModel : ViewModel() {
         val jumbleWithInsertedString = insertAnswerIntoRandomString(generatedString,
             currentAnswer,
             wordInsertionIndex)
-
-//        val currentJumbledWord = selectNewRandomClueAndAnswer() //TODO decide whether to use
 
         _uiState.update { currentState ->
             currentState.copy(
@@ -113,18 +109,17 @@ class GameViewModel : ViewModel() {
     }
 
     fun checkSubmittedGuess(){
-        if(userGuess.equals(currentWord, ignoreCase = true)){
-            // correct answer received, update score
+        if(userGuess.equals(_uiState.value.currentAnswer, ignoreCase = true)){
             _uiState.update{ currentState ->
                 currentState.copy(wordsCompleted = currentState.wordsCompleted.inc())
             }
             updateGameState()
         } else {
-            // incorrect answer received
             _uiState.update{ currentState ->
                 currentState.copy(isGuessedWordWrong = true)
             }
         }
+        updateUserGuess("")
     }
 
 
