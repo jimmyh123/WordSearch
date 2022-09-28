@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">WordSearch</string>
+    <string name="answer1">pepperoni</string>
+    <string name="clue1">Famous pizza topping</string>
+    <string name="answer2">answer2</string>
+    <string name="clue2">clue2</string>
+    <string name="answer3">answer3</string>
+    <string name="clue3">clue3</string>
 </resources>
