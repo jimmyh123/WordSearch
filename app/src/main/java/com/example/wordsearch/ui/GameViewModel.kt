@@ -1,9 +1,11 @@
 package com.example.wordsearch.ui
 
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.example.wordsearch.MainActivity
 import com.example.wordsearch.data.allCluesAndAnswers
 import com.example.wordsearch.util.Constants.MAX_NO_OF_TURNS
 import com.example.wordsearch.util.Constants.difficulty
@@ -14,24 +16,19 @@ import kotlinx.coroutines.flow.update
 
 class GameViewModel : ViewModel() {
 
-//    private lateinit var currentWord: String
-    private var usedWords: MutableSet<Int> = mutableSetOf()
+    private var usedWordIndices: MutableSet<Int> = mutableSetOf()
     var userGuess by mutableStateOf("")
         private set
     private val _uiState = MutableStateFlow(GameUiState())
     val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
 
-
-
     init {
-//        resetGame()
-        usedWords.clear()
+        usedWordIndices.clear()
         updateUi()
-
     }
 
     private fun updateUi() {
-        val wordSelectionIndex = ((allCluesAndAnswers.indices).random())
+        val wordSelectionIndex = findUniqueAnswerIndex()
         val currentClue = allCluesAndAnswers[wordSelectionIndex].first
         val currentAnswer = allCluesAndAnswers[wordSelectionIndex].second
         val generatedString = createRandomString(difficulty)
@@ -56,21 +53,19 @@ class GameViewModel : ViewModel() {
         userGuess = guessedWord
     }
 
-//    private fun selectNewRandomClueAndAnswer(): Answer {
-//        val clueAndAnswerSet = clueAndAnswer.random()
-//        //TODO check if this answer has appeared before
-//
-//        if(usedWords.contains(clueAndAnswerSet.answer)){
-//            return selectNewRandomClueAndAnswer() //TODO check this has more unique answers than questions asked
-//        } else {
-//            usedWords.add(clueAndAnswerSet.answer)
-//            return clueAndAnswerSet
-//        }
-//    }
+    private fun findUniqueAnswerIndex(): Int{
+        val index = (allCluesAndAnswers.indices).random()
+        if(usedWordIndices.contains(index)){
+            return findUniqueAnswerIndex() //TODO check this has more unique answers than questions asked
+        } else {
+            usedWordIndices.add(index)
+            return index
+        }
+    }
 
     private fun createRandomString(currentDifficulty: Int): String {
-        val ALPHABET: List<Char> = ('a'..'z') + ('A'..'Z')
-        val randomString: String = List(currentDifficulty) { ALPHABET.random() }.joinToString("")
+        val alphabet: CharRange = ('a'..'z')
+        val randomString: String = List(currentDifficulty) { alphabet.random() }.joinToString("")
         return randomString
     }
 
@@ -83,10 +78,8 @@ class GameViewModel : ViewModel() {
         return myString.insert(insertionPosition,targetString).toString()
     }
 
-
-
     private fun updateGameState() {
-        if (usedWords.size == MAX_NO_OF_TURNS){
+        if (usedWordIndices.size == MAX_NO_OF_TURNS){
             // last round in game
             _uiState.update{ currentState ->
                 currentState.copy(
@@ -111,7 +104,10 @@ class GameViewModel : ViewModel() {
     fun checkSubmittedGuess(){
         if(userGuess.equals(_uiState.value.currentAnswer, ignoreCase = true)){
             _uiState.update{ currentState ->
-                currentState.copy(wordsCompleted = currentState.wordsCompleted.inc())
+                currentState.copy(
+                    isGuessedWordWrong = false,
+                    wordsCompleted = currentState.wordsCompleted.inc()
+                )
             }
             updateGameState()
         } else {
@@ -121,6 +117,4 @@ class GameViewModel : ViewModel() {
         }
         updateUserGuess("")
     }
-
-
 }
