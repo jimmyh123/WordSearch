@@ -102,7 +102,7 @@ class GameViewModel : ViewModel() {
     }
 
     fun checkSubmittedGuess(){
-        if(userGuess.equals(_uiState.value.currentAnswer, ignoreCase = true)){
+        if(userGuess.trim().equals(_uiState.value.currentAnswer, ignoreCase = true)){
             _uiState.update{ currentState ->
                 currentState.copy(
                     isGuessedWordWrong = false,
