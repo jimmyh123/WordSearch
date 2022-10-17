@@ -1,28 +1,28 @@
 package com.example.wordsearch
 
+import android.content.Context
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.ui.Modifier
-import com.example.wordsearch.ui.WordSearch
 import com.example.wordsearch.ui.theme.WordSearchTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             WordSearchTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colors.background
-                ) {
-                    WordSearch()
-                }
+                NavigationComposable()
             }
         }
     }
 }
+
+fun correctAnswerToast(context: Context){
+    Toast.makeText(context, "Correct!", Toast.LENGTH_SHORT).show()
+}
+

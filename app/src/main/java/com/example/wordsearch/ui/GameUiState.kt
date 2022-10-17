@@ -1,10 +1,8 @@
 package com.example.wordsearch.ui
 
-
-
 data class GameUiState(
-    val currentClue: String = "",
-    val currentAnswer: String = "",
+    val currentClue: String? = "",
+    val currentAnswer: String? = "",
     val currentJumble: String = "",
     val wordInsertionIndex: Int = 0,
     val wordSelectionIndex: Int = 0,

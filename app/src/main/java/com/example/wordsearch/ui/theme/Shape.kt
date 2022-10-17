@@ -8,7 +8,4 @@ val Shapes = Shapes(
     small = RoundedCornerShape(25),
     medium = RoundedCornerShape(25),
     large = RoundedCornerShape(25)
-//    small = RoundedCornerShape(4.dp),
-//    medium = RoundedCornerShape(4.dp),
-//    large = RoundedCornerShape(0.dp)
 )

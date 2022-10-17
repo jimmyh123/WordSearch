@@ -1,51 +1,80 @@
 package com.example.wordsearch.ui
 
-import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import com.example.wordsearch.MainActivity
-import com.example.wordsearch.data.allCluesAndAnswers
+import androidx.lifecycle.viewModelScope
+import com.example.wordsearch.data.Quiz
+import com.example.wordsearch.data.QuizRepository
+import com.example.wordsearch.util.Constants
 import com.example.wordsearch.util.Constants.MAX_NO_OF_TURNS
-import com.example.wordsearch.util.Constants.difficulty
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+//import com.example.wordsearch.util.Constants.difficulty
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class GameViewModel : ViewModel() {
+@HiltViewModel
+class GameViewModel @Inject constructor(
+    private val repository: QuizRepository
+): ViewModel() {
+
+    private var currentQuizList by mutableStateOf<List<Quiz?>?>(null)
 
     private var usedWordIndices: MutableSet<Int> = mutableSetOf()
     var userGuess by mutableStateOf("")
         private set
+
     private val _uiState = MutableStateFlow(GameUiState())
     val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
 
+    private var difficulty = Constants.EASY
+
     init {
         usedWordIndices.clear()
-        updateUi()
+
+        collectUpdatedWordFlow()
+        triggerUiUpdate()
     }
 
-    private fun updateUi() {
-        val wordSelectionIndex = findUniqueAnswerIndex()
-        val currentClue = allCluesAndAnswers[wordSelectionIndex].first
-        val currentAnswer = allCluesAndAnswers[wordSelectionIndex].second
-        val generatedString = createRandomString(difficulty)
-        val wordInsertionIndex = ((0 until difficulty).random())
-        val jumbleWithInsertedString = insertAnswerIntoRandomString(generatedString,
-            currentAnswer,
-            wordInsertionIndex)
 
-        _uiState.update { currentState ->
-            currentState.copy(
-                wordInsertionIndex = wordInsertionIndex,
-                wordSelectionIndex = wordSelectionIndex,
-                currentClue = currentClue,
-                currentAnswer = currentAnswer,
-                jumbleWithInsertedString = jumbleWithInsertedString,
-                skipsPerformed = _uiState.value.skipsPerformed
+    fun collectUpdatedWordFlow(){
+        viewModelScope.launch {
+            // Trigger the flow and consume its elements using collect
+            repository.getQuizData()
+                .catch { exception -> println(exception) }
+                .collect { myQuizList ->
+                    this@GameViewModel.currentQuizList = myQuizList
+                }
+        }
+    }
+
+    fun triggerUiUpdate() {
+        val wordSelectionIndex = findUniqueAnswerIndex()
+
+        if (wordSelectionIndex!=-1) {
+            val currentClue = currentQuizList?.get(wordSelectionIndex)?.clue
+            val currentAnswer = currentQuizList?.get(wordSelectionIndex)?.answer
+
+            val generatedString = createRandomString(difficulty)
+            val wordInsertionIndex = ((0 until difficulty).random())
+            val jumbleWithInsertedString = insertAnswerIntoRandomString(
+                generatedString,
+                currentAnswer,
+                wordInsertionIndex
             )
+
+            _uiState.update { currentState ->
+                currentState.copy(
+                    wordInsertionIndex = wordInsertionIndex,
+                    wordSelectionIndex = wordSelectionIndex,
+                    currentClue = currentClue,
+                    currentAnswer = currentAnswer,
+                    jumbleWithInsertedString = jumbleWithInsertedString,
+                    skipsPerformed = _uiState.value.skipsPerformed
+                )
+            }
         }
     }
 
@@ -54,24 +83,24 @@ class GameViewModel : ViewModel() {
     }
 
     private fun findUniqueAnswerIndex(): Int{
-        val index = (allCluesAndAnswers.indices).random()
-        if(usedWordIndices.contains(index)){
-            return findUniqueAnswerIndex() //TODO check this has more unique answers than questions asked
+        val index = (currentQuizList?.indices)?.random() ?: return -1
+
+        return if(usedWordIndices.contains(index)){
+            findUniqueAnswerIndex() //TODO check this has more unique answers than questions asked
         } else {
             usedWordIndices.add(index)
-            return index
+            index
         }
     }
 
     private fun createRandomString(currentDifficulty: Int): String {
         val alphabet: CharRange = ('a'..'z')
-        val randomString: String = List(currentDifficulty) { alphabet.random() }.joinToString("")
-        return randomString
+        return List(currentDifficulty) { alphabet.random() }.joinToString("")
     }
 
     private fun insertAnswerIntoRandomString(
         generatedString: String,
-        targetString: String,
+        targetString: String?,
         insertionPosition: Int
     ): String {
         val myString = StringBuilder(generatedString)
@@ -88,7 +117,7 @@ class GameViewModel : ViewModel() {
             }
         } else {
             // start new round
-            updateUi()
+            triggerUiUpdate()
         }
     }
 
@@ -116,5 +145,13 @@ class GameViewModel : ViewModel() {
             }
         }
         updateUserGuess("")
+    }
+
+    fun toggleGameDifficulty(newDifficulty: String){
+        when (newDifficulty) {
+            "Easy" -> difficulty = Constants.EASY
+            "Medium" -> difficulty = Constants.MEDIUM
+            "Hard" -> difficulty = Constants.HARD
+        }
     }
 }

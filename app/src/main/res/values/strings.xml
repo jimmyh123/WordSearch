@@ -6,4 +6,5 @@
     <string name="clue2">clue2</string>
     <string name="answer3">answer3</string>
     <string name="clue3">clue3</string>
+    <string name="title_bar_subtitle">Find the hidden word!</string>
 </resources>
