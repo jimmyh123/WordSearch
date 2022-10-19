@@ -8,7 +8,6 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -22,14 +21,18 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.SoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.wordsearch.R
-import com.example.wordsearch.correctAnswerToast
 import com.example.wordsearch.ui.theme.WordSearchTheme
+import com.example.wordsearch.util.TestTags
+import com.example.wordsearch.util.UiEvent
 
 
 @Composable
@@ -40,13 +43,29 @@ fun WordSearch(
     gameViewModel.collectUpdatedWordFlow()
     gameViewModel.triggerUiUpdate()
 
+    val context = LocalContext.current
+
     val gameUiState by gameViewModel.uiState.collectAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    val selectedDifficultyButton = remember { mutableStateOf("Easy") }
+
+    val scaffoldState = rememberScaffoldState()
+    LaunchedEffect(key1 = true){
+        gameViewModel.uiEvent.collect{ event ->
+            when(event){
+                is UiEvent.ShowToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+                else -> Unit
+            }
+        }
+    }
+
     Scaffold(
+        scaffoldState = scaffoldState,
         topBar = { WordSearchTopAppBar() }
     ) {
-
         Column(
             modifier = modifier
                 .verticalScroll(rememberScrollState())
@@ -66,7 +85,7 @@ fun WordSearch(
 
             AnswerBar(
                 userGuess = gameViewModel.userGuess,
-                isGuessedWordWrong = gameUiState.isGuessedWordWrong,
+                gameUiState = gameUiState,
                 checkSubmittedGuess = { gameViewModel.checkSubmittedGuess() },
                 updateUserGuess = { gameViewModel.updateUserGuess(it) }
             )
@@ -74,11 +93,14 @@ fun WordSearch(
                 modifier = modifier,
                 currentAnswer = gameUiState.currentAnswer,
                 skipWord = { gameViewModel.skipWord() },
-                isGuessedWordWrong = gameUiState.isGuessedWordWrong,
                 checkSubmittedGuess = { gameViewModel.checkSubmittedGuess() },
-                keyboardController = keyboardController
+                keyboardController = keyboardController,
+                gameUiState = gameUiState
             )
-            GameDifficultyButtons(toggleGameDifficulty = { gameViewModel.toggleGameDifficulty("") })
+            GameDifficultyButtons(
+                toggleGameDifficulty = { gameViewModel.toggleGameDifficulty(it) },
+                selectedDifficultyButton = selectedDifficultyButton
+            )
         }
     }
 }
@@ -117,9 +139,11 @@ fun ClueText(currentClue: String?) {
 @Composable
 fun WordJumble(jumbleWithInsertedString: String?) {
     Card(
-        modifier = Modifier.padding(
+        modifier = Modifier
+            .padding(
             top = 8.dp,
-            bottom = 8.dp),
+            bottom = 8.dp)
+            .background(color = MaterialTheme.colors.surface),
         elevation = 10.dp,
         shape = RectangleShape
     ) {
@@ -133,12 +157,16 @@ fun WordsCompletedSkipsPerformed(
     skipsPerformed: Int
 ) {
     Row {
-        Text("Words completed: $wordsCompleted")
+        Text(
+            text = "Words completed: $wordsCompleted",
+            modifier = Modifier.testTag(TestTags.WORDS_COMPLETED_COUNTER)
+        )
         Text(
             text = "Skips: $skipsPerformed",
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentWidth(Alignment.End),
+                .wrapContentWidth(Alignment.End)
+                .testTag(TestTags.NUMBER_OF_SKIPS_COUNTER)
         )
     }
 }
@@ -147,27 +175,27 @@ fun WordsCompletedSkipsPerformed(
 fun AnswerBar(
     userGuess: String,
     updateUserGuess: (String) -> Unit,
-    isGuessedWordWrong: Boolean,
-    checkSubmittedGuess: (KeyboardActionScope.() -> Unit)?,
+    checkSubmittedGuess: () -> Unit,
+    gameUiState: GameUiState,
 ) {
     OutlinedTextField(
         value = userGuess,
         singleLine = true,
         onValueChange = updateUserGuess,
         label = {
-            if (isGuessedWordWrong) {
+            if (gameUiState.isGuessedWordWrong) {
                 Text("Wrong answer")
             } else {
                 Text("Enter your answer")
             }
         },
         modifier = Modifier.fillMaxWidth(),
-        isError = isGuessedWordWrong,
+        isError = gameUiState.isGuessedWordWrong,
         keyboardOptions = KeyboardOptions.Default.copy(
             imeAction = ImeAction.Done
         ),
         keyboardActions = KeyboardActions(
-            onDone = checkSubmittedGuess
+            onDone = { checkSubmittedGuess() }
         )
     )
 
@@ -177,10 +205,10 @@ fun AnswerBar(
 fun SkipAndSubmitButtons(
     modifier: Modifier,
     currentAnswer: String?,
-    isGuessedWordWrong: Boolean,
     keyboardController: SoftwareKeyboardController?,
     skipWord: () -> Unit,
-    checkSubmittedGuess: () -> Unit
+    checkSubmittedGuess: () -> Unit,
+    gameUiState: GameUiState
 ) {
     Row(
         modifier = modifier
@@ -189,24 +217,30 @@ fun SkipAndSubmitButtons(
         horizontalArrangement = Arrangement.SpaceAround
     ) {
         val context = LocalContext.current
-        OutlinedButton(onClick = {
+        OutlinedButton(
+            onClick = {
             Toast.makeText(
                 context,
                 "Answer: $currentAnswer",
                 Toast.LENGTH_SHORT
             ).show()
-            skipWord
-        }) {
-            Text("Skip")
-        }
-        OutlinedButton(onClick = {
-            checkSubmittedGuess
-            if (!isGuessedWordWrong) {
-                correctAnswerToast(context)
-                keyboardController?.hide()
+            skipWord()
+                      },
+            modifier = Modifier.semantics {
+                this.contentDescription = R.string.skip_button_text.toString()
             }
-        }) {
-            Text("Submit")
+        ) {
+            Text(stringResource(R.string.skip_button_text))
+        }
+        OutlinedButton(
+            onClick = {
+            checkSubmittedGuess()
+        },
+            modifier = Modifier.semantics {
+                this.contentDescription = R.string.submit_button_text.toString()
+            }
+        ) {
+            Text(stringResource(R.string.submit_button_text))
         }
     }
 }
@@ -214,9 +248,10 @@ fun SkipAndSubmitButtons(
 
 @Composable
 fun GameDifficultyButtons(
-    toggleGameDifficulty: (String) -> Unit
+    toggleGameDifficulty: (String) -> Unit,
+    selectedDifficultyButton: MutableState<String>,
 ) {
-    val selectedDifficultyButton = remember { mutableStateOf("Easy") }
+
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier
@@ -225,7 +260,8 @@ fun GameDifficultyButtons(
     ) {
         Button(
             colors = ButtonDefaults.buttonColors(
-                backgroundColor = if(selectedDifficultyButton.value=="Easy") Color.Blue else Color.Gray
+                backgroundColor = if(selectedDifficultyButton.value=="Easy")
+                    MaterialTheme.colors.primary else MaterialTheme.colors.surface
             ),
             onClick = {
                 selectedDifficultyButton.value = "Easy"
@@ -238,7 +274,9 @@ fun GameDifficultyButtons(
         }
         Button(
             colors = ButtonDefaults.buttonColors(
-                backgroundColor = if(selectedDifficultyButton.value=="Medium") Color.Blue else Color.Gray
+                backgroundColor = if(selectedDifficultyButton.value=="Medium")
+                    MaterialTheme.colors.primary else MaterialTheme.colors.surface
+
             ),
             onClick = {
                 selectedDifficultyButton.value = "Medium"
@@ -251,7 +289,8 @@ fun GameDifficultyButtons(
         }
         Button(
             colors = ButtonDefaults.buttonColors(
-                backgroundColor = if(selectedDifficultyButton.value=="Hard") Color.Blue else Color.Gray
+                backgroundColor = if(selectedDifficultyButton.value=="Hard")
+                    MaterialTheme.colors.primary else MaterialTheme.colors.surface
             ),
             onClick = {
                 selectedDifficultyButton.value = "Hard"

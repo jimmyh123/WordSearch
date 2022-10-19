@@ -24,7 +24,7 @@ import com.example.wordsearch.util.*
 
 @Composable
 fun NavigationComposable() {
-    WordSearchTheme {
+//    WordSearchTheme {
         val navController = rememberNavController()
 
         val currentBackStack by navController.currentBackStackEntryAsState()
@@ -80,7 +80,7 @@ fun NavigationComposable() {
                 }
             }
         }
-    }
+//    }
 }
 
 fun NavHostController.navigateSingleTopTo(route: String) =

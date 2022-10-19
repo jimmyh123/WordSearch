@@ -20,10 +20,14 @@ private val LightColorPalette = lightColors(
     primaryVariant = PurplePeriwinkle,
     secondary = YellowRiseNShine,
     background = BlueSeabrook,
-    surface = GreyElectromagnetic,
+//    surface = GreyElectromagnetic,
+    surface = GreyChainGang,
+//    onPrimary: Color = Color.White,
+//    onSecondary: Color = Color.Black,
+//    onBackground: Color = Color.Black,
+//    onSurface: Color = Color.Black,
+//    onError: Color = Color.White
 
-//       GreenDownloadProgress,
-//       BlueSeabrook
 )
 
 @Composable

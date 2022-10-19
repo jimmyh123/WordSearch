@@ -5,12 +5,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.wordsearch.add_edit_quiz.AddEditQuizEvent
 import com.example.wordsearch.data.Quiz
 import com.example.wordsearch.data.QuizRepository
 import com.example.wordsearch.util.Constants
 import com.example.wordsearch.util.Constants.MAX_NO_OF_TURNS
-//import com.example.wordsearch.util.Constants.difficulty
+import com.example.wordsearch.util.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -22,7 +24,7 @@ class GameViewModel @Inject constructor(
 
     private var currentQuizList by mutableStateOf<List<Quiz?>?>(null)
 
-    private var usedWordIndices: MutableSet<Int> = mutableSetOf()
+    private var usedAnswerList: MutableSet<String> = mutableSetOf()
     var userGuess by mutableStateOf("")
         private set
 
@@ -31,11 +33,20 @@ class GameViewModel @Inject constructor(
 
     private var difficulty = Constants.EASY
 
+    private val _uiEvent = Channel<UiEvent>()
+    val uiEvent = _uiEvent.receiveAsFlow()
+
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading = _isLoading.asStateFlow()
+
     init {
-        usedWordIndices.clear()
+        usedAnswerList.clear()
 
         collectUpdatedWordFlow()
         triggerUiUpdate()
+        viewModelScope.launch {
+            _isLoading.value = false
+        }
     }
 
 
@@ -83,13 +94,20 @@ class GameViewModel @Inject constructor(
     }
 
     private fun findUniqueAnswerIndex(): Int{
-        val index = (currentQuizList?.indices)?.random() ?: return -1
+        var randomIndex: Int = -1
+        var currentWord: String? = null
+        if (!currentQuizList.isNullOrEmpty()){
+            randomIndex = currentQuizList!!.indices.random()
+            currentWord = currentQuizList!![randomIndex]?.answer
+        }
 
-        return if(usedWordIndices.contains(index)){
-            findUniqueAnswerIndex() //TODO check this has more unique answers than questions asked
+        if (usedAnswerList.contains(currentWord)) {
+            return findUniqueAnswerIndex()
         } else {
-            usedWordIndices.add(index)
-            index
+            if (currentWord != null) {
+                usedAnswerList.add(currentWord)
+            }
+            return randomIndex
         }
     }
 
@@ -108,7 +126,7 @@ class GameViewModel @Inject constructor(
     }
 
     private fun updateGameState() {
-        if (usedWordIndices.size == MAX_NO_OF_TURNS){
+        if (usedAnswerList.size == MAX_NO_OF_TURNS){
             // last round in game
             _uiState.update{ currentState ->
                 currentState.copy(
@@ -132,13 +150,16 @@ class GameViewModel @Inject constructor(
 
     fun checkSubmittedGuess(){
         if(userGuess.trim().equals(_uiState.value.currentAnswer, ignoreCase = true)){
+
             _uiState.update{ currentState ->
                 currentState.copy(
                     isGuessedWordWrong = false,
                     wordsCompleted = currentState.wordsCompleted.inc()
                 )
             }
+            sendUiEvent(UiEvent.ShowToast("Correct!"))
             updateGameState()
+
         } else {
             _uiState.update{ currentState ->
                 currentState.copy(isGuessedWordWrong = true)
@@ -152,6 +173,27 @@ class GameViewModel @Inject constructor(
             "Easy" -> difficulty = Constants.EASY
             "Medium" -> difficulty = Constants.MEDIUM
             "Hard" -> difficulty = Constants.HARD
+        }
+
+        // recompose jumbled string and update UI without changing clue/answer
+        val generatedString = createRandomString(difficulty)
+        val wordInsertionIndex = ((0 until difficulty).random())
+        val jumbleWithInsertedString = insertAnswerIntoRandomString(
+            generatedString,
+            uiState.value.currentAnswer,
+            wordInsertionIndex
+        )
+        _uiState.update { currentState ->
+            currentState.copy(
+                wordInsertionIndex = wordInsertionIndex,
+                jumbleWithInsertedString = jumbleWithInsertedString
+            )
+        }
+    }
+
+    private fun sendUiEvent(event: UiEvent){
+        viewModelScope.launch{
+            _uiEvent.send(event)
         }
     }
 }
