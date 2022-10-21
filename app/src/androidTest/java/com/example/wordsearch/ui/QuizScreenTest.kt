@@ -1,29 +1,26 @@
 package com.example.wordsearch.ui
 
+import android.util.Log
 import androidx.activity.compose.setContent
-import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
-import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.performClick
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.wordsearch.MainActivity
 import com.example.wordsearch.R
 import com.example.wordsearch.data.Quiz
-import com.example.wordsearch.data.QuizDao
 import com.example.wordsearch.data.QuizRepository
 import com.example.wordsearch.di.AppModule
-import com.example.wordsearch.di.TestAppModule
 import com.example.wordsearch.ui.navigation.WordSearchObj
 import com.example.wordsearch.ui.theme.WordSearchTheme
+import com.example.wordsearch.util.Constants
 import com.example.wordsearch.util.TestTags
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.UninstallModules
+import junit.framework.Assert.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -33,7 +30,6 @@ import javax.inject.Inject
 @HiltAndroidTest
 @UninstallModules(AppModule::class)
 class QuizScreenTest {
-
 
 
     @get:Rule(order = 0)
@@ -54,27 +50,28 @@ class QuizScreenTest {
                 NavHost(
                     navController = navController,
                     startDestination = WordSearchObj.route
-                ){
-                   composable(route = WordSearchObj.route){
-                       WordSearch()
-                   }
+                ) {
+                    composable(route = WordSearchObj.route) {
+                        WordSearch()
+                    }
                 }
             }
         }
     }
 
-    suspend fun addDummyDataToDatabase(){
+    private suspend fun addDummyDataToDatabase(answerString: String, numberOfAnswers: Int) {
+        for (i in 1..numberOfAnswers)
             repository.insertQuizData(
                 Quiz(
-                    clue = "clue",
-                    answer = "answer",
-                    id = 1
+                    clue = "clue$i",
+                    answer = "$answerString$i",
+                    id = i
                 )
             )
     }
 
     @Test
-    fun clickSkipButton_skipsIncreaseByOne(){
+    fun clickSkipButton_skipsIncreaseByOne() {
 
         composeRule
             .onNodeWithTag(TestTags.NUMBER_OF_SKIPS_COUNTER)
@@ -89,12 +86,12 @@ class QuizScreenTest {
             .assertTextEquals("Skips: 1")
     }
 
+
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun clickSubmitButtonWithDataInDatabase_totalWordsCompletedDoesNotIncrease(){
+    fun clickSubmitButtonWithDataInDatabase_totalWordsCompletedDoesNotIncrease() {
         runTest {
-            addDummyDataToDatabase()
-
+            addDummyDataToDatabase("answer", 1)
             composeRule
                 .onNodeWithTag(TestTags.WORDS_COMPLETED_COUNTER)
                 .assertTextEquals("Words completed: 0")
@@ -110,7 +107,7 @@ class QuizScreenTest {
     }
 
     @Test
-    fun clickSubmitButtonWithEmptyDatabase_totalWordsCompletedIncreases(){
+    fun clickSubmitButtonWithEmptyDatabase_totalWordsCompletedIncreases() {
 
         composeRule
             .onNodeWithTag(TestTags.WORDS_COMPLETED_COUNTER)
@@ -123,5 +120,16 @@ class QuizScreenTest {
         composeRule
             .onNodeWithTag(TestTags.WORDS_COMPLETED_COUNTER)
             .assertTextEquals("Words completed: 1")
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun addCluesAndAnswersToDataBase_AnswerVisibleInJumbledText() {
+        runTest {
+            addDummyDataToDatabase("answer", 5)
+            composeRule
+                .onNodeWithContentDescription(R.string.jumbled_text.toString())
+                .assertTextContains("answer", substring = true)
+        }
     }
 }

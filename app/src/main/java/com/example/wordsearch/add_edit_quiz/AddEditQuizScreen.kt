@@ -52,7 +52,10 @@ fun AddEditQuizScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ){
-            Text("Add your own clues and answers!")
+            Text("Add your own clues and answers!" +
+                    "\npress the 'tick' to add them to the game" +
+                    "\nNote: answers must be one-word answers",
+            modifier = Modifier.padding(16.dp))
             Spacer(modifier = Modifier.height(20.dp))
 
             TextField(

@@ -57,9 +57,14 @@ fun QuizScreen(
         }
     ){
         Column(Modifier.fillMaxSize()) {
+            Text(
+                text = "Click the '+' to add new clues/answers." +
+                    "\nClick directly on the clue/answer pair to edit them." +
+                    "\nClick the trashcan to delete a clue/answer pair",
+                modifier = Modifier.padding(16.dp)
+            )
             LazyColumn(
                 Modifier.weight(1f)
-//                modifier = Modifier.fillMaxSize()
             ) {
                 items(quizData.value) { quiz ->
                     QuizItem(
@@ -82,10 +87,6 @@ fun QuizScreen(
             ) {
                 Text("BACK TO WORD SEARCH")
             }
-
         }
-
-
     }
-
 }

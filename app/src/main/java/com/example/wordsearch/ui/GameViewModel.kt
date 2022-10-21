@@ -101,7 +101,7 @@ class GameViewModel @Inject constructor(
             currentWord = currentQuizList!![randomIndex]?.answer
         }
 
-        if (usedAnswerList.contains(currentWord)) {
+        if (usedAnswerList.contains(currentWord) && currentWord!="") {
             return findUniqueAnswerIndex()
         } else {
             if (currentWord != null) {

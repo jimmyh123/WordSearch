@@ -147,7 +147,11 @@ fun WordJumble(jumbleWithInsertedString: String?) {
         elevation = 10.dp,
         shape = RectangleShape
     ) {
-        Text(jumbleWithInsertedString.toString())
+        Text(
+            text = jumbleWithInsertedString.toString(),
+        modifier = Modifier.semantics(mergeDescendants = true){
+            this.contentDescription = R.string.jumbled_text.toString()}
+        )
     }
 }
 
@@ -259,6 +263,9 @@ fun GameDifficultyButtons(
             .padding(8.dp)
     ) {
         Button(
+            modifier = Modifier.semantics {
+                this.contentDescription = R.string.easy_difficulty.toString()
+            },
             colors = ButtonDefaults.buttonColors(
                 backgroundColor = if(selectedDifficultyButton.value=="Easy")
                     MaterialTheme.colors.primary else MaterialTheme.colors.surface
@@ -273,6 +280,9 @@ fun GameDifficultyButtons(
             )
         }
         Button(
+            modifier = Modifier.semantics {
+                this.contentDescription = R.string.medium_difficulty.toString()
+            },
             colors = ButtonDefaults.buttonColors(
                 backgroundColor = if(selectedDifficultyButton.value=="Medium")
                     MaterialTheme.colors.primary else MaterialTheme.colors.surface
@@ -288,6 +298,9 @@ fun GameDifficultyButtons(
             )
         }
         Button(
+            modifier = Modifier.semantics {
+                this.contentDescription = R.string.hard_difficulty.toString()
+            },
             colors = ButtonDefaults.buttonColors(
                 backgroundColor = if(selectedDifficultyButton.value=="Hard")
                     MaterialTheme.colors.primary else MaterialTheme.colors.surface

@@ -3,4 +3,8 @@
     <string name="title_bar_subtitle">Find the hidden word!</string>
     <string name="skip_button_text">Skip</string>
     <string name="submit_button_text">Submit</string>
+    <string name="jumbled_text">jumbled text</string>
+    <string name="easy_difficulty">Easy difficulty</string>
+    <string name="medium_difficulty">Medium difficulty</string>
+    <string name="hard_difficulty">Hard difficulty</string>
 </resources>
