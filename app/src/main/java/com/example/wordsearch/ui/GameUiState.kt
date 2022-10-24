@@ -1,6 +1,7 @@
 package com.example.wordsearch.ui
 
 data class GameUiState(
+
     val currentClue: String? = "",
     val currentAnswer: String? = "",
     val currentJumble: String = "",
@@ -11,5 +12,6 @@ data class GameUiState(
 
     val isGuessedWordWrong: Boolean = false,
     val wordsCompleted: Int = 0,
-    val skipsPerformed: Int = 0
+    val skipsPerformed: Int = 0,
+    val isGameOver: Boolean = false
     )

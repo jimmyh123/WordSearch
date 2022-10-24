@@ -1,7 +1,6 @@
-@file:OptIn(ExperimentalComposeUiApi::class)
-
 package com.example.wordsearch.ui
 
+import android.app.Activity
 import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.widget.Toast
@@ -14,13 +13,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -44,10 +39,7 @@ fun WordSearch(
     gameViewModel.triggerUiUpdate()
 
     val context = LocalContext.current
-
     val gameUiState by gameViewModel.uiState.collectAsState()
-    val keyboardController = LocalSoftwareKeyboardController.current
-
     val selectedDifficultyButton = remember { mutableStateOf("Easy") }
 
     val scaffoldState = rememberScaffoldState()
@@ -93,16 +85,58 @@ fun WordSearch(
                 modifier = modifier,
                 currentAnswer = gameUiState.currentAnswer,
                 skipWord = { gameViewModel.skipWord() },
-                checkSubmittedGuess = { gameViewModel.checkSubmittedGuess() },
-                keyboardController = keyboardController,
-                gameUiState = gameUiState
+                checkSubmittedGuess = { gameViewModel.checkSubmittedGuess() }
             )
             GameDifficultyButtons(
                 toggleGameDifficulty = { gameViewModel.toggleGameDifficulty(it) },
                 selectedDifficultyButton = selectedDifficultyButton
             )
         }
+        if (gameUiState.isGameOver){
+            FinalScoreDialog(
+                onPlayAgain = { gameViewModel.resetGame() },
+                wordsCompleted = gameUiState.wordsCompleted,
+                skipsPerformed = gameUiState.skipsPerformed
+            )
+        }
     }
+}
+
+@Composable
+private fun FinalScoreDialog(
+    onPlayAgain: () -> Unit,
+    modifier: Modifier = Modifier,
+    wordsCompleted: Int,
+    skipsPerformed: Int
+) {
+    val activity = (LocalContext.current as Activity)
+
+    AlertDialog(
+        onDismissRequest = {
+            // Dismiss the dialog when the user clicks outside the dialog or on the back
+            // button. If you want to disable that functionality, simply use an empty
+            // onCloseRequest.
+        },
+        title = { Text("Game Complete!") },
+        text = { Text("Words completed: $wordsCompleted \nSkips performed: $skipsPerformed") },
+        modifier = modifier,
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    activity.finish()
+                }
+            ) {
+                Text(text = "Exit")
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onPlayAgain
+            ) {
+                Text(text = "Play again")
+            }
+        }
+    )
 }
 
 @Composable
@@ -209,10 +243,8 @@ fun AnswerBar(
 fun SkipAndSubmitButtons(
     modifier: Modifier,
     currentAnswer: String?,
-    keyboardController: SoftwareKeyboardController?,
     skipWord: () -> Unit,
     checkSubmittedGuess: () -> Unit,
-    gameUiState: GameUiState
 ) {
     Row(
         modifier = modifier

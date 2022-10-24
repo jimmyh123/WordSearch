@@ -1,4 +1,4 @@
-package com.example.wordsearch
+package com.example.wordsearch.ui.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
@@ -15,18 +15,12 @@ import androidx.navigation.navArgument
 import com.example.wordsearch.add_edit_quiz.AddEditQuizScreen
 import com.example.wordsearch.ui.QuizScreen
 import com.example.wordsearch.ui.WordSearch
-import com.example.wordsearch.ui.navigation.AddEditQuiz
-import com.example.wordsearch.ui.navigation.AddWords
-import com.example.wordsearch.ui.navigation.WordSearchObj
-import com.example.wordsearch.ui.navigation.quizTabRowScreens
-import com.example.wordsearch.ui.theme.WordSearchTheme
 import com.example.wordsearch.util.*
 
 @Composable
 fun NavigationComposable() {
-//    WordSearchTheme {
-        val navController = rememberNavController()
 
+        val navController = rememberNavController()
         val currentBackStack by navController.currentBackStackEntryAsState()
         val currentDestination = currentBackStack?.destination
 
@@ -80,7 +74,6 @@ fun NavigationComposable() {
                 }
             }
         }
-//    }
 }
 
 fun NavHostController.navigateSingleTopTo(route: String) =

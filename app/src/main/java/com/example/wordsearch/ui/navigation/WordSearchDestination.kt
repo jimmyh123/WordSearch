@@ -27,5 +27,5 @@ object AddEditQuiz : WordSearchDestination {
     override val route = "AddEditQuiz"
 }
 
-// Screens to be displayed in the top RallyTabRow
+// Screens to be displayed in the top row
 val quizTabRowScreens = listOf(WordSearchObj, AddWords)

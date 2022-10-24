@@ -5,7 +5,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.wordsearch.add_edit_quiz.AddEditQuizEvent
 import com.example.wordsearch.data.Quiz
 import com.example.wordsearch.data.QuizRepository
 import com.example.wordsearch.util.Constants
@@ -40,15 +39,23 @@ class GameViewModel @Inject constructor(
     val isLoading = _isLoading.asStateFlow()
 
     init {
-        usedAnswerList.clear()
-
-        collectUpdatedWordFlow()
-        triggerUiUpdate()
+        resetGame()
         viewModelScope.launch {
             _isLoading.value = false
         }
     }
 
+    fun resetGame(){
+        _uiState.update { currentState -> currentState.copy(
+            isGameOver = false,
+            wordsCompleted = 0,
+            skipsPerformed = 0
+        )}
+        usedAnswerList.clear()
+        collectUpdatedWordFlow()
+        triggerUiUpdate()
+
+    }
 
     fun collectUpdatedWordFlow(){
         viewModelScope.launch {
@@ -101,13 +108,13 @@ class GameViewModel @Inject constructor(
             currentWord = currentQuizList!![randomIndex]?.answer
         }
 
-        if (usedAnswerList.contains(currentWord) && currentWord!="") {
-            return findUniqueAnswerIndex()
+        return if (usedAnswerList.contains(currentWord) && currentWord!="") {
+            findUniqueAnswerIndex()
         } else {
             if (currentWord != null) {
                 usedAnswerList.add(currentWord)
             }
-            return randomIndex
+            randomIndex
         }
     }
 
@@ -126,15 +133,15 @@ class GameViewModel @Inject constructor(
     }
 
     private fun updateGameState() {
-        if (usedAnswerList.size == MAX_NO_OF_TURNS){
-            // last round in game
+        if (usedAnswerList.size >= MAX_NO_OF_TURNS-1 ||
+            usedAnswerList.size >= currentQuizList!!.size-1){
             _uiState.update{ currentState ->
                 currentState.copy(
-                   /*TODO*/
+                   isGameOver = true
                 )
             }
         } else {
-            // start new round
+            // game not over so start a new round
             triggerUiUpdate()
         }
     }

@@ -99,7 +99,6 @@ private fun QuizTab(
 
 private val TabHeight = 56.dp
 private const val InactiveTabOpacity = 0.60f
-
 private const val TabFadeInAnimationDuration = 150
 private const val TabFadeInAnimationDelay = 100
 private const val TabFadeOutAnimationDuration = 100

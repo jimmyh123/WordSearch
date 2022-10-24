@@ -5,14 +5,11 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 
 private val DarkColorPalette = darkColors(
         primary = OrangeHarleyDavidson,
         primaryVariant = BeigeHintPensive,
-        secondary = GreyChainGang,
-//            BluePicoVoid
-//            GreyElectromagnetic
+        secondary = GreyChainGang
 )
 
 private val LightColorPalette = lightColors(
@@ -20,14 +17,7 @@ private val LightColorPalette = lightColors(
     primaryVariant = PurplePeriwinkle,
     secondary = YellowRiseNShine,
     background = BlueSeabrook,
-//    surface = GreyElectromagnetic,
     surface = GreyChainGang,
-//    onPrimary: Color = Color.White,
-//    onSecondary: Color = Color.Black,
-//    onBackground: Color = Color.Black,
-//    onSurface: Color = Color.Black,
-//    onError: Color = Color.White
-
 )
 
 @Composable
@@ -45,21 +35,3 @@ fun WordSearchTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Compos
         content = content
     )
 }
-
-/*
-private val LightColorPalette = lightColors(
-    primary = Purple500,
-    primaryVariant = Purple700,
-    secondary = Teal200
-
-    /* Other default colors to override
-    background = Color.White,
-    surface = Color.White,
-    onPrimary = Color.White,
-    onSecondary = Color.Black,
-    onBackground = Color.Black,
-    onSurface = Color.Black,
-    */
-)
-*/
-

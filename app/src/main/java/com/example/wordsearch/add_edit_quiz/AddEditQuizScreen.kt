@@ -73,7 +73,7 @@ fun AddEditQuizScreen(
             TextField(
                 value = viewModel.answer,
                 onValueChange = {
-                    viewModel.onEvent(AddEditQuizEvent.OnAnswerChange(it))
+                    viewModel.onEvent(AddEditQuizEvent.OnAnswerChange(it.lowercase()))
                 },
                 placeholder = {
                     Text("Answer")
