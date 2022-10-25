@@ -7,4 +7,7 @@
     <string name="easy_difficulty">Easy difficulty</string>
     <string name="medium_difficulty">Medium difficulty</string>
     <string name="hard_difficulty">Hard difficulty</string>
+    <string name="save">Save</string>
+    <string name="clue">Clue</string>
+    <string name="answer">Answer</string>
 </resources>

@@ -7,17 +7,17 @@ plugins {
 }
 
 android {
-    namespace 'com.example.wordsearch'
+    namespace 'com.jimmyh123.wordsearch'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.example.wordsearch"
+        applicationId "com.jimmyh123.wordsearch"
         minSdk 21
         targetSdk 33
         versionCode 1
         versionName "1.0"
 
-        testInstrumentationRunner "com.example.wordsearch.HiltTestRunner"
+        testInstrumentationRunner "com.jimmyh123.wordsearch.HiltTestRunner"
         vectorDrawables {
             useSupportLibrary true
         }
