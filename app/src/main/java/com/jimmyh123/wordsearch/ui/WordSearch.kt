@@ -57,11 +57,12 @@ fun WordSearch(
     Scaffold(
         scaffoldState = scaffoldState,
         topBar = { WordSearchTopAppBar() }
-    ) {
+    ) { innerPadding ->
         Column(
             modifier = modifier
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(16.dp)
+                .padding(innerPadding),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
 
