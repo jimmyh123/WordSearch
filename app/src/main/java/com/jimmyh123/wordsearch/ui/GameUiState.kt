@@ -1,7 +1,6 @@
 package com.jimmyh123.wordsearch.ui
 
 data class GameUiState(
-
     val currentClue: String? = "",
     val currentAnswer: String? = "",
     val currentJumble: String = "",
@@ -9,9 +8,8 @@ data class GameUiState(
     val wordSelectionIndex: Int = 0,
     val generatedString: String = "",
     val jumbleWithInsertedString: String = "",
-
     val isGuessedWordWrong: Boolean = false,
     val wordsCompleted: Int = 0,
     val skipsPerformed: Int = 0,
     val isGameOver: Boolean = false
-    )
+)
